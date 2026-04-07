@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Tablero Trello simulado - Priorify</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #1a2a3a 0%, #0f1a24 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            padding: 2rem 1.5rem;
+            min-height: 100vh;
+        }
+
+        /* Contenedor principal */
+        .board-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 20px;
+            padding: 1.2rem;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Encabezado del tablero */
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .board-header h1 {
+            color: white;
+            font-weight: 600;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+
+        .board-header p {
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            background: #0f212e;
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+        }
+
+        /* Grid de listas (scroll horizontal en móvil) */
+        .board-lists {
+            display: flex;
+            gap: 1.2rem;
+            overflow-x: auto;
+            padding: 0.5rem 0.2rem 1rem 0.2rem;
+            scrollbar-width: thin;
+        }
+
+        /* Cada lista estilo Trello */
+        .list {
+            background: #ebecf0;
+            border-radius: 16px;
+            width: 280px;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            max-height: 70vh;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.1s ease;
+        }
+
+        .list:hover {
+            transform: translateY(-2px);
+        }
+
+        .list-header {
+            padding: 0.8rem 1rem;
+            background: #ffffffd9;
+            border-radius: 16px 16px 0 0;
+            border-bottom: 1px solid #d0d4da;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-header span:first-child {
+            background: #e2e4e9;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: normal;
+            color: #2c3e4e;
+        }
+
+        .list-cards {
+            padding: 0.8rem;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            min-height: 280px;
+        }
+
+        /* Tarjeta individual */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 0.7rem 0.9rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: all 0.1s;
+            cursor: default;
+        }
+
+        .card:hover {
+            background: #fefefe;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #172b4d;
+            margin-bottom: 0.3rem;
+        }
+
+        .card-desc {
+            font-size: 0.7rem;
+            color: #5e6c84;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-badge {
+            display: inline-block;
+            background: #e9ecef;
+            border-radius: 20px;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .priority-high {
+            border-left-color: #e53e3e;
+        }
+
+        .priority-med {
+            border-left-color: #ed8936;
+        }
+
+        .priority-low {
+            border-left-color: #48bb78;
+        }
+
+        /* Mensaje de error orgánico */
+        .organic-error {
+            margin-top: 2rem;
+            background: #fff7e6;
+            border-left: 6px solid #f5a623;
+            border-radius: 20px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            gap: 0.8rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+            color: #7b5e2c;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .organic-error strong {
+            color: #b45b0a;
+        }
+
+        .icon-warning {
+            font-size: 1.5rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+            color: #a0b3c9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="board-container">
+        <div class="board-header">
+            <h1> Priorify – Tablero SCRUM</h1>
+            <p> Sprint 1 · Equipo: Adrián, María, José, Daniela, Esteban</p>
+        </div>
+
+        <div class="board-lists">
+            <!-- BACKLOG -->
+            <div class="list">
+                <div class="list-header">
+                    Backlog
+                    <span>5 tareas</span>
+                </div>
+                <div class="list-cards">
+                    <div class="card priority-med">
+                        <div class="card-title"> Editar perfil de usuario</div>
+                        <div class="card-desc">Permitir cambiar foto y nombre</div>
+                        <span class="card-badge">Historia</span>
+                    </div>
+                    <div class="card priority-low">
+                        <div class="card-title"> Modo oscuro</div>
+                        <div class="card-desc">Tema oscuro para la app</div>
+                        <span class="card-badge">Mejora</span>
+                    </div>
+                    <div class="card priority-high">
+                        <div class="card-title"> Notificaciones push en iOS</div>
+                        <div class="card-desc">Configurar FCM para iOS</div>
+                        <span class="card-badge">Bug potencial</span>
+                    </div>
+                    <div class="card priority-med">
+                        <div class="card-title"> Adjuntar imágenes a tareas</div>
+                        <div class="card-desc">Premium (mockup)</div>
+                        <span class="card-badge">Futuro</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SPRINT 1 -->
+            <div class="list">
+                <div class="list-header">
+                    🏃 Sprint 1
+                    <span>4 tareas</span>
+                </div>
+                <div class="list-cards">
+                    <div class="card priority-high">
+                        <div class="card-title"> Registro con email + Google</div>
+                        <div class="card-desc">Firebase Auth integrado</div>
+                        <span class="card-badge">Adrián (PO)</span>
+                    </div>
+                    <div class="card priority-high">
+                        <div class="card-title"> CRUD tareas personales</div>
+                        <div class="card-desc">Crear, editar, eliminar tareas</div>
+                        <span class="card-badge">José Solano</span>
+                    </div>
+                    <div class="card priority-med">
+                        <div class="card-title"> Prioridades visuales</div>
+                        <div class="card-desc">Colores y etiquetas</div>
+                        <span class="card-badge">Daniela Mora</span>
+                    </div>
+                    <div class="card priority-med">
+                        <div class="card-title"> SQLite local (offline first)</div>
+                        <div class="card-desc">Guardar tareas sin internet</div>
+                        <span class="card-badge">Esteban Vargas</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EN PROGRESO -->
+            <div class="list">
+                <div class="list-header">
+                    En progreso
+                    <span>2 tareas (WIP límite 3)</span>
+                </div>
+                <div class="list-cards">
+                    <div class="card priority-high">
+                        <div class="card-title"> Sincronización offline</div>
+                        <div class="card-desc">Cola FIFO + reintentos</div>
+                        <span class="card-badge">Esteban / José</span>
+                    </div>
+                    <div class="card priority-med">
+                        <div class="card-title"> Crear equipos y códigos</div>
+                        <div class="card-desc">Lógica de invitación</div>
+                        <span class="card-badge">Daniela Mora</span>
+                    </div>
+                    <!-- Tarjeta duplicada (error orgánico) la mostramos como ejemplo -->
+                    <div class="card priority-high" style="opacity:0.85; background:#fef2e8;">
+                        <div class="card-title"> [DUPLICADA] Sincronización offline</div>
+                        <div class="card-desc">Se creó dos veces por error en el backlog</div>
+                        <span class="card-badge">Corregido luego</span>
+                    </div>
+                </div>
+                <div style="font-size:0.65rem; padding:0 0.8rem 0.6rem 0.8rem; color:#b85c00;">❗ Se excedió WIP
+                    momentáneamente</div>
+            </div>
+
+            <!-- EN REVISIÓN -->
+            <div class="list">
+                <div class="list-header">
+                    En revisión
+                    <span>2 tareas</span>
+                </div>
+                <div class="list-cards">
+                    <div class="card priority-high">
+                        <div class="card-title"> Pruebas de registro</div>
+                        <div class="card-desc">Unitarias + integración</div>
+                        <span class="card-badge">QA simulado</span>
+                    </div>
+                    <div class="card priority-med">
+                        <div class="card-title"> UI de lista de tareas</div>
+                        <div class="card-desc">Revisión de diseño</div>
+                        <span class="card-badge">María (SM)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TERMINADO -->
+            <div class="list">
+                <div class="list-header">
+                    Terminado
+                    <span>3 tareas</span>
+                </div>
+                <div class="list-cards">
+                    <div class="card priority-low">
+                        <div class="card-title"> Documento de requisitos v1</div>
+                        <div class="card-desc">Semana 1 y 2</div>
+                        <span class="card-badge">Entregado</span>
+                    </div>
+                    <div class="card priority-low">
+                        <div class="card-title"> Diagrama casos de uso</div>
+                        <div class="card-desc">Versión inicial</div>
+                        <span class="card-badge">Aprobado</span>
+                    </div>
+                    <div class="card priority-med">
+                        <div class="card-title"> Estructura de navegación</div>
+                        <div class="card-desc">Bottom navbar</div>
+                        <span class="card-badge">Done</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer>
+            🧩 Tablero simulado para proyecto Priorify · Metodología SCRUM · Fuente: elaboración propia (Trello
+            adaptado)
+        </footer>
+    </div>
+</body>
+
+</html>
